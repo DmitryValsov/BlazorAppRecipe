@@ -1,0 +1,58 @@
+﻿@page "/recipes"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using BlazorWebAppRecipe.Models
+@using BlazorAppRecipe.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<BlazorAppRecipe.Data.BlazorAppRecipeContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<div>
+    <form action="/recipes" data-enhance>
+        <input type="search" name="IngredientsFilter" />
+        <input type="submit" value="Search" />
+    </form>
+</div>
+
+<p>
+    <a href="recipes/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="FilteredMovies">
+    <PropertyColumn Property="recipe => recipe.Title" />
+    <PropertyColumn Property="recipe => recipe.ReleaseDate" />
+    <PropertyColumn Property="recipe => recipe.Ingredients" />
+    <PropertyColumn Property="recipe => recipe.Price" />
+
+    <TemplateColumn Context="recipe">
+        <a href="@($"recipes/edit?id={recipe.Id}")">Edit</a> |
+        <a href="@($"recipes/details?id={recipe.Id}")">Details</a> |
+        <a href="@($"recipes/delete?id={recipe.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private BlazorAppRecipeContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+
+
+    [SupplyParameterFromQuery]
+    private string? IngredientsFilter { get; set; }
+
+    private IQueryable<Recipe> FilteredMovies =>
+        context.Recipe.Where(m => m.Ingredients!.Contains(IngredientsFilter ?? string.Empty));
+
+
+   
+
+
+}
